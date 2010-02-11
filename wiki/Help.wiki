@@ -1,0 +1,5 @@
+#summary Introdução a ajuda para o uso do Calx-RPN.
+
+= RPN =
+
+RPN é a sigla usada para a [http://en.wikipedia.org/wiki/Reverse_Polish_notation Notação Polonesa Reversa]. As calculadoras que utilizam este meio de entrada, normalmente trazem um pouco de estranheza para a pessoal que vai usar. Mas após um tempo a pessoa percebe (assim como eu) que é uma forma mais natural de fazer contas.
