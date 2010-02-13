@@ -3,8 +3,8 @@ object AboutForm: TAboutForm
   Top = 259
   BorderStyle = bsDialog
   Caption = 'Sobre o Calx'
-  ClientHeight = 118
-  ClientWidth = 236
+  ClientHeight = 208
+  ClientWidth = 250
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -38,9 +38,9 @@ object AboutForm: TAboutForm
   object Label2: TLabel
     Left = 59
     Top = 26
-    Width = 121
+    Width = 183
     Height = 20
-    Caption = 'Calculadora RPN'
+    Caption = 'Calculadora RPN - Pr'#225'tica'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -17
@@ -49,8 +49,8 @@ object AboutForm: TAboutForm
     ParentFont = False
   end
   object Label3: TLabel
-    Left = 7
-    Top = 58
+    Left = 8
+    Top = 82
     Width = 223
     Height = 20
     Caption = 'Alex Sandre Dundes Rodrigues'
@@ -61,9 +61,49 @@ object AboutForm: TAboutForm
     Font.Style = []
     ParentFont = False
   end
+  object Label4: TLabel
+    Left = 8
+    Top = 64
+    Width = 75
+    Height = 13
+    Caption = 'Desenvolvedor:'
+  end
+  object Label5: TLabel
+    Left = 8
+    Top = 113
+    Width = 63
+    Height = 13
+    Caption = 'Beta Testers:'
+  end
+  object Label6: TLabel
+    Left = 8
+    Top = 130
+    Width = 136
+    Height = 20
+    Caption = 'Fernando Nomellini'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -17
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label7: TLabel
+    Left = 8
+    Top = 148
+    Width = 176
+    Height = 20
+    Caption = 'Renato Barboza Ferreira'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -17
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
   object BitBtn1: TBitBtn
-    Left = 156
-    Top = 88
+    Left = 166
+    Top = 174
     Width = 75
     Height = 25
     TabOrder = 0

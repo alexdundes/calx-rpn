@@ -8,13 +8,13 @@ uses
 type
   TTipoOperacao = (
     //Pilha
-    opDup, opDrop, opDropAll, opEdit, opSwap,
+    opDup, opDrop, opClear, opEdit, opSwap,
     //Geral
-    opAdd, opSub, opMul, opDiv, opCHS,
+    opAdd, opSub, opMul, opDiv, opChS,
     //Comum
-    opInv, opPow, opPerc, opSqr, opSqrt,
+    opInv, opPow, opPerc, opSqr, opSqRt,
     //Trigonometria
-    opPi, opSin, opCos, opTan, opArcSin, opArcCos, opArcTan,
+    opPi, opSin, opCos, opTan, opASin, opACos, opATan,
     //Configuracao
     opAbout);
 
@@ -166,6 +166,11 @@ type
     function Numero: Extended;
   end;
 
+  IToNumeroRelativo = interface
+    ['{806614F3-9EDD-45C2-816B-B358F37CEE5D}']
+    function NumeroRelativo(const AValue: Extended; const AOperacao: IOperacao): Extended;
+  end;
+
   TElementoNumero = class(TElementoPilha, IUnarioOperacao, IBinarioOperacao, IToNumero)
   private
     FNumero: Extended;
@@ -182,6 +187,28 @@ type
   public
     constructor Create(const AValue: string); overload;
     constructor Create(const AValue: Extended); overload;
+    class function IsValid(const AValue: string): Boolean;
+  end;
+
+  TElementoPercentual = class(TElementoPilha, IUnarioOperacao, IBinarioOperacao, IToNumero, IToNumeroRelativo)
+  private
+    FPercentual: Extended;
+  protected
+    procedure Assign(AElemento: IElementoPilha); override;
+    procedure Draw(APosicao: Integer; ACanvas: TCanvas; var ARect: TRect); override;
+    function ToString: string; override;
+    { IUnarioOperacao }
+    function OperacaoUnario(AOperacao: IOperacao): IElementoPilha;
+    { IBinarioOperacao }
+    function OperacaoBinario(AOperacao: IOperacao; AElemento: IElementoPilha): IElementoPilha;
+    { IToNumero }
+    function Numero: Extended;
+    { IToNumeroRelativo }
+    function NumeroRelativo(const AValue: Extended; const AOperacao: IOperacao): Extended;
+  public
+    constructor Create(const AValue: string); overload;
+    constructor Create(const AValue: Extended); overload;
+    class function IsValid(const AValue: string): Boolean;
   end;
 
   TNo = (noNenhum, noRaiz, noGeral, noPilha, noMatematica, noComum,
@@ -220,7 +247,7 @@ const
     //Pilha
     (Operacao: opDup; Nome: 'Dup'; Classe: TOperacaoPilha; No: noPilha; Imagem: 2; Botao: boPilha; Dica: 'Duplica o primeiro item da pilha (atalho: [Enter] com entrada vazia)'),
     (Operacao: opDrop; Nome: 'Drop'; Classe: TOperacaoPilha; No: noPilha; Imagem: 3; Botao: boPilha; Dica: 'Apaga o primeiro item da pilha (atalho: [BkSpace] com entrada vazia)'),
-    (Operacao: opDropAll; Nome: 'DropAll'; Classe: TOperacaoPilha; No: noPilha; Imagem: 3; Botao: boNao; Dica: 'Apaga todos os itens da pilha'),
+    (Operacao: opClear; Nome: 'Clear'; Classe: TOperacaoPilha; No: noPilha; Imagem: 18; Botao: boPilha; Dica: 'Apaga todos os itens da pilha'),
     (Operacao: opEdit; Nome: 'Edit'; Classe: TOperacaoPilha; No: noPilha; Imagem: 16; Botao: boPilha; Dica: 'Edita o primeiro item da pilha'),
     (Operacao: opSwap; Nome: 'Swap'; Classe: TOperacaoPilha; No: noPilha; Imagem: 17; Botao: boPilha; Dica: 'Troca o primeiro item da pilha com o segundo'),
     //Geral
@@ -228,21 +255,21 @@ const
     (Operacao: opSub; Nome: 'Sub'; Classe: TOperacaoBinario; No: noGeral; Imagem: 5; Botao: boComum; Dica: 'Subtração (atalho: [-])'),
     (Operacao: opMul; Nome: 'Mul'; Classe: TOperacaoBinario; No: noGeral; Imagem: 6; Botao: boComum; Dica: 'Multiplicação (atalho: [*])'),
     (Operacao: opDiv; Nome: 'Div'; Classe: TOperacaoBinario; No: noGeral; Imagem: 7; Botao: boComum; Dica: 'Divisão (atalho: [/])'),
-    (Operacao: opCHS; Nome: 'ChS'; Classe: TOperacaoUnario; No: noGeral; Imagem: 9; Botao: boComum; Dica: 'Troca o sinal (atalho: [.])'),
+    (Operacao: opChS; Nome: 'ChS'; Classe: TOperacaoUnario; No: noGeral; Imagem: 9; Botao: boComum; Dica: 'Troca o sinal (atalho: [.])'),
     //Comum
     (Operacao: opInv; Nome: 'Inv'; Classe: TOperacaoUnario; No: noComum; Imagem: 15; Botao: boComum; Dica: 'Inverso 1/x'),
     (Operacao: opPow; Nome: 'Pow'; Classe: TOperacaoBinario; No: noComum; Imagem: 8; Botao: boComum; Dica: 'Potência (atalho: [^])'),
-    (Operacao: opPerc; Nome: 'Perc'; Classe: TOperacaoUnario; No: noComum; Imagem: 10; Botao: boComum; Dica: 'Divide por 100 (atalho: [%])'),
+    (Operacao: opPerc; Nome: 'Perc'; Classe: TOperacaoUnario; No: noComum; Imagem: 10; Botao: boComum; Dica: 'Converte número para percentual'),
     (Operacao: opSqr; Nome: 'Sqr'; Classe: TOperacaoUnario; No: noComum; Imagem: 11; Botao: boComum; Dica: 'Quadrado x^2'),
-    (Operacao: opSqrt; Nome: 'SqRt'; Classe: TOperacaoUnario; No: noComum; Imagem: 12; Botao: boComum; Dica: 'Raiz Quadrada x^(1/2)'),
+    (Operacao: opSqRt; Nome: 'SqRt'; Classe: TOperacaoUnario; No: noComum; Imagem: 12; Botao: boComum; Dica: 'Raiz Quadrada x^(1/2)'),
     //Trigonometria
     (Operacao: opPi; Nome: 'Pi'; Classe: TOperacaoConstante; No: noTrigonometria; Imagem: 13; Botao: boNao; Dica: 'constante - número pi'),
     (Operacao: opSin; Nome: 'Sin'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'seno de x'),
     (Operacao: opCos; Nome: 'Cos'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'cosseno de x'),
     (Operacao: opTan; Nome: 'Tan'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'tangente de x'),
-    (Operacao: opArcSin; Nome: 'ArcSin'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco seno de x'),
-    (Operacao: opArcCos; Nome: 'ArcCos'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco cosseno de x'),
-    (Operacao: opArcTan; Nome: 'ArcTan'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco tangente de x'),
+    (Operacao: opASin; Nome: 'ASin'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco seno de x'),
+    (Operacao: opACos; Nome: 'ACos'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco cosseno de x'),
+    (Operacao: opATan; Nome: 'ATan'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco tangente de x'),
     //Configuracao
     (Operacao: opAbout; Nome: 'About'; Classe: TOperacaoPilha; No: noConfiguracao; Imagem: 14; Botao: boNao; Dica: 'Sobre o Calx (este programa)')
   );
@@ -377,14 +404,13 @@ begin
   case AKey of
     #8:
       if AEntrada.Texto = '' then
-        LEntrada := 'DROP';
-    '+': LEntrada := 'ADD';
-    '-': LEntrada := 'SUB';
-    '*': LEntrada := 'MUL';
-    '/': LEntrada := 'DIV';
-    '.': LEntrada := 'CHS';
-    '%': LEntrada := 'PERC';
-    '^': LEntrada := 'POW';
+        LEntrada := 'Drop';
+    '+': LEntrada := 'Add';
+    '-': LEntrada := 'Sub';
+    '*': LEntrada := 'Mul';
+    '/': LEntrada := 'Div';
+    '.': LEntrada := 'ChS';
+    '^': LEntrada := 'Pow';
   end;
   LEnter := (LEntrada <> '') or (AKey = #13);
   if LEnter then
@@ -401,11 +427,12 @@ end;
 class function TFabricaElemento.TryCreateElemento(
   const AValue: string): IElementoPilha;
 var
-  LNumero: Extended;
   laco: TTipoOperacao;
 begin
   Result := nil;
-  if TryStrToFloat(AValue, LNumero) then
+  if TElementoPercentual.IsValid(AValue) then
+    Result := TElementoPercentual.Create(AValue)
+  else if TElementoNumero.IsValid(AValue) then
     Result := TElementoNumero.Create(AValue)
   else
   begin
@@ -515,7 +542,7 @@ begin
         raise Exception.Create('A pilha está vazia');
       LPilha.Pop;
     end;
-    opDropAll: begin
+    opClear: begin
       LPilha.Clear;
     end;
     opEdit: begin
@@ -629,6 +656,13 @@ begin
   ARect.Bottom := ARect.Bottom - ACanvas.TextHeight(LNumero) - 2;
 end;
 
+class function TElementoNumero.IsValid(const AValue: string): Boolean;
+var
+  LNumero: Extended;
+begin
+  Result := TryStrToFloat(AValue, LNumero);
+end;
+
 function TElementoNumero.Numero: Extended;
 begin
   Result := FNumero;
@@ -637,15 +671,21 @@ end;
 function TElementoNumero.OperacaoBinario(AOperacao: IOperacao; AElemento: IElementoPilha): IElementoPilha;
 var
   LToNumero: IToNumero;
+  LToNumeroRelativo: IToNumeroRelativo;
+  ASegundoValor: Extended;
 begin
-  if not Supports(AElemento, IToNumero, LToNumero) then
+  if Supports(AElemento, IToNumeroRelativo, LToNumeroRelativo) then
+    ASegundoValor := LToNumeroRelativo.NumeroRelativo(FNumero, AOperacao)
+  else if Supports(AElemento, IToNumero, LToNumero) then
+    ASegundoValor := LToNumero.Numero
+  else
     raise Exception.Create('Segundo parâmetro não pode ser convertido em número');
   case AOperacao.TipoOperacao of
-    opAdd: FNumero := FNumero + LToNumero.Numero;
-    opSub: FNumero := FNumero - LToNumero.Numero;
-    opMul: FNumero := FNumero * LToNumero.Numero;
-    opDiv: FNumero := FNumero / LToNumero.Numero;
-    opPow: FNumero := Power(FNumero, LToNumero.Numero);
+    opAdd: FNumero := FNumero + ASegundoValor;
+    opSub: FNumero := FNumero - ASegundoValor;
+    opMul: FNumero := FNumero * ASegundoValor;
+    opDiv: FNumero := FNumero / ASegundoValor;
+    opPow: FNumero := Power(FNumero, ASegundoValor);
   else
     raise Exception.Create('Primeiro parâmetro não suporta este tipo de operação');
   end;
@@ -656,15 +696,18 @@ function TElementoNumero.OperacaoUnario(
   AOperacao: IOperacao): IElementoPilha;
 begin
   case AOperacao.TipoOperacao of
-    opCHS: FNumero := -FNumero;
+    opChS: FNumero := -FNumero;
     opInv: begin
       if FNumero = 0 then
         raise Exception.Create('Não é possível determinar o inverso de zero');
       FNumero := 1/FNumero;
     end;
-    opPerc: FNumero := FNumero / 100;
+    opPerc: begin
+      Result := TElementoPercentual.Create(FNumero);
+      Exit;
+    end;
     opSQR: FNumero := Sqr(FNumero);
-    opSqrt: begin
+    opSqRt: begin
       if FNumero < 0 then
         raise Exception.Create('Não é possível extrair raiz quadrada de número negativo');
       FNumero := Sqrt(FNumero);
@@ -672,9 +715,9 @@ begin
     opSin: FNumero := Sin(FNumero);
     opCos: FNumero := Cos(FNumero);
     opTan: FNumero := Tan(FNumero);
-    opArcSin: FNumero := ArcSin(FNumero);
-    opArcCos: FNumero := ArcCos(FNumero);
-    opArcTan: FNumero := ArcTan(FNumero);
+    opASin: FNumero := ArcSin(FNumero);
+    opACos: FNumero := ArcCos(FNumero);
+    opATan: FNumero := ArcTan(FNumero);
   else
     raise Exception.Create('Parâmetro não suporta este tipo de operação');
   end;
@@ -684,6 +727,116 @@ end;
 function TElementoNumero.ToString: string;
 begin
   Result := FloatToStr(FNumero);
+end;
+
+{ TElementoPercentual }
+
+constructor TElementoPercentual.Create(const AValue: string);
+begin
+  Assert(IsValid(AValue), 'Não é um Percental válido');
+  Create(StrToFloat(Copy(AValue, 1, Length(AValue) - 1)));
+end;
+
+procedure TElementoPercentual.Assign(AElemento: IElementoPilha);
+var
+  LToNumero: IToNumero;
+begin
+  inherited;
+  if Supports(AElemento, IToNumero, LToNumero) then
+    FPercentual := LToNumero.Numero;
+end;
+
+constructor TElementoPercentual.Create(const AValue: Extended);
+begin
+  FPercentual := AValue / 100;
+end;
+
+procedure TElementoPercentual.Draw(APosicao: Integer; ACanvas: TCanvas;
+  var ARect: TRect);
+var
+  LPercentual: string;
+begin
+  inherited;
+  LPercentual := FloatToStr(FPercentual * 100) + '%';
+  ACanvas.Font.Color := clBlue;
+  try
+    ACanvas.TextOut(ARect.Right - ACanvas.TextWidth(LPercentual) - 1, ARect.Bottom - ACanvas.TextHeight(LPercentual) - 1, LPercentual);
+  finally
+    ACanvas.Font.Color := clWindowText;
+  end;
+  ARect.Bottom := ARect.Bottom - ACanvas.TextHeight(LPercentual) - 2;
+end;
+
+class function TElementoPercentual.IsValid(const AValue: string): Boolean;
+var
+  LNumero: Extended;
+begin
+  Result := (Copy(AValue, Length(AValue), 1) = '%') and
+    TryStrToFloat(Copy(AValue, 1, Length(AValue) - 1), LNumero);
+end;
+
+function TElementoPercentual.Numero: Extended;
+begin
+  Result := FPercentual;
+end;
+
+function TElementoPercentual.NumeroRelativo(
+  const AValue: Extended; const AOperacao: IOperacao): Extended;
+begin
+  if AOperacao.TipoOperacao in [opAdd, opSub] then
+    Result := AValue * FPercentual
+  else
+    Result := FPercentual;
+end;
+
+function TElementoPercentual.OperacaoBinario(AOperacao: IOperacao;
+  AElemento: IElementoPilha): IElementoPilha;
+var
+  LToNumero: IToNumero;
+begin
+  if not Supports(AElemento, IToNumero, LToNumero) then
+    raise Exception.Create('Segundo parâmetro não pode ser convertido em número');
+  case AOperacao.TipoOperacao of
+    opAdd: FPercentual := FPercentual + LToNumero.Numero;
+    opSub: FPercentual := FPercentual - LToNumero.Numero;
+    opMul: FPercentual := FPercentual * LToNumero.Numero;
+    opDiv: FPercentual := FPercentual / LToNumero.Numero;
+    opPow: FPercentual := Power(FPercentual, LToNumero.Numero);
+  else
+    raise Exception.Create('Primeiro parâmetro não suporta este tipo de operação');
+  end;
+  Result := Self;
+end;
+
+function TElementoPercentual.OperacaoUnario(
+  AOperacao: IOperacao): IElementoPilha;
+begin
+  case AOperacao.TipoOperacao of
+    opChS: FPercentual := -FPercentual;
+    opInv: begin
+      if FPercentual = 0 then
+        raise Exception.Create('Não é possível determinar o inverso de zero');
+      FPercentual := 1/FPercentual;
+    end;
+    opPerc: FPercentual := FPercentual / 100;
+    opSQR: FPercentual := Sqr(FPercentual);
+    opSqRt: begin
+      if FPercentual < 0 then
+        raise Exception.Create('Não é possível extrair raiz quadrada de número negativo');
+      FPercentual := Sqrt(FPercentual);
+    end;
+  else
+    //Outra operação com percentual, faz converter em número e executa a operação
+    Result := TElementoNumero.Create(FPercentual);
+    (Result as IUnarioOperacao).OperacaoUnario(AOperacao);
+    Exit;
+  end;
+  Result := Self;
+end;
+
+function TElementoPercentual.ToString: string;
+begin
+  Result := FloatToStr(FPercentual * 100) + '%';
 end;
 
 end.

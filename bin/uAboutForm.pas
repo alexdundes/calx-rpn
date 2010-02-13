@@ -13,6 +13,10 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
@@ -21,7 +25,7 @@ type
   end;
 
 const
-  Titulo = 'Calx - V. 0.02';
+  Titulo = 'Calx-RPN V. 0.03';
 
 implementation
 
