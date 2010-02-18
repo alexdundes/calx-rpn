@@ -26,12 +26,16 @@ type
     procedure EntradaMemoKeyPress(Sender: TObject; var Key: Char);
     procedure OperacaoTreeViewDblClick(Sender: TObject);
     procedure OperacaoTreeViewChange(Sender: TObject; Node: TTreeNode);
+    procedure EntradaMemoKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     FPilha: IPilha;
     procedure Carrega;
     procedure ClickButton(Sender: TObject);
     { IEntrada }
+    function GetSobCursor: string;
     function GetTexto: string;
+    procedure SetSobCursor(const Value: string);
     procedure SetTexto(const Value: string);
 
     procedure About;
@@ -196,6 +200,51 @@ begin
   finally
     LAboutForm.Release;
   end;
+end;
+
+procedure TPrincipalForm.EntradaMemoKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  TFabricaElemento.KeyDown(Self, Key, Shift);
+end;
+
+function TPrincipalForm.GetSobCursor: string;
+var
+  LTamanho: Integer;
+begin
+  if EntradaMemo.SelLength < 1 then
+  begin
+    LTamanho := 1;
+    EntradaMemo.SelStart := EntradaMemo.SelStart - 1;
+    EntradaMemo.SelLength := LTamanho;
+    while (Copy(EntradaMemo.SelText, 1, 1) <> ' ') and (EntradaMemo.SelStart > 0) do
+    begin
+      EntradaMemo.SelStart := EntradaMemo.SelStart - 1;
+      Inc(LTamanho);
+      EntradaMemo.SelLength := LTamanho;
+    end;
+    if Copy(EntradaMemo.SelText, 1, 1) = ' ' then
+    begin
+      EntradaMemo.SelStart := EntradaMemo.SelStart + 1;
+      Dec(LTamanho);
+      EntradaMemo.SelLength := LTamanho;
+    end;
+    EntradaMemo.SelLength := EntradaMemo.SelLength + 1;
+    while (EntradaMemo.SelLength > LTamanho) and (Copy(EntradaMemo.SelText, EntradaMemo.SelLength, 1) <> ' ') do
+    begin
+      LTamanho := EntradaMemo.SelLength;
+      EntradaMemo.SelLength := EntradaMemo.SelLength + 1;
+    end;
+    if Copy(EntradaMemo.SelText, EntradaMemo.SelLength, 1) = ' ' then
+      EntradaMemo.SelLength := EntradaMemo.SelLength - 1;
+  end;
+  Result := EntradaMemo.SelText;
+end;
+
+procedure TPrincipalForm.SetSobCursor(const Value: string);
+begin
+  if EntradaMemo.SelLength > 0 then
+    EntradaMemo.SelText := Value;
 end;
 
 end.
