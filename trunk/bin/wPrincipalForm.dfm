@@ -82,7 +82,7 @@ object PrincipalForm: TPrincipalForm
     object PilhaPaintBox: TPaintBox
       Left = 5
       Top = 5
-      Width = 240
+      Width = 232
       Height = 232
       Anchors = [akLeft, akTop, akRight, akBottom]
       OnPaint = PilhaPaintBoxPaint
@@ -97,12 +97,13 @@ object PrincipalForm: TPrincipalForm
       ParentCtl3D = False
       ScrollBars = ssVertical
       TabOrder = 0
+      OnKeyDown = EntradaMemoKeyDown
       OnKeyPress = EntradaMemoKeyPress
     end
     object EnterButton: TBitBtn
       Left = 210
       Top = 283
-      Width = 35
+      Width = 27
       Height = 50
       Anchors = [akRight, akBottom]
       Default = True
@@ -130,7 +131,7 @@ object PrincipalForm: TPrincipalForm
     object ToolBarComum: TToolBar
       Left = 5
       Top = 260
-      Width = 239
+      Width = 231
       Height = 22
       Align = alNone
       Anchors = [akLeft, akRight, akBottom]
@@ -145,7 +146,7 @@ object PrincipalForm: TPrincipalForm
     object ToolBarPilha: TToolBar
       Left = 5
       Top = 238
-      Width = 250
+      Width = 232
       Height = 22
       Align = alNone
       Anchors = [akLeft, akRight, akBottom]
@@ -162,7 +163,7 @@ object PrincipalForm: TPrincipalForm
     Left = 64
     Top = 104
     Bitmap = {
-      494C010113001800040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010113001800040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -958,6 +959,7 @@ object PrincipalForm: TPrincipalForm
       C007BFFFF800C3C3C0075DDF00008181C007DBEF00008001C007DBEF0000C003
       C007DBEF0000E007C007DAAF0000F00FC0078B6F0000F00FC007DAAF0000E007
       C007DBEF0000C003C007DBEF00008001C007DDDF80008181C007D7FFC01FC3C3
-      C007EFFFE01FE7E7E00FFFFFF01FFFFF}
+      C007EFFFE01FE7E7E00FFFFFF01FFFFF00000000000000000000000000000000
+      000000000000}
   end
 end

@@ -3,7 +3,7 @@ unit uCalx;
 interface
 
 uses
-  SysUtils, Classes, Types, Graphics, Math;
+  SysUtils, Classes, Windows, Types, Graphics, Math;
 
 type
   TTipoOperacao = (
@@ -22,12 +22,15 @@ type
 
   IEntrada = interface
     ['{E0256543-67D4-4F27-BE33-2C79327B43E6}']
+    function GetSobCursor: string;
     function GetTexto: string;
+    procedure SetSobCursor(const Value: string);
     procedure SetTexto(const Value: string);
 
     procedure About;
     function GetPilha: IPilha;
     procedure Invalida;
+    property SobCursor: string read GetSobCursor write SetSobCursor;
     property Texto: string read GetTexto write SetTexto;
   end;
 
@@ -96,6 +99,7 @@ type
     class function TryCreateElemento(const AValue: string): IElementoPilha;
   public
     class function CreateElemento(const AValue: string): IElementoPilha;
+    class procedure KeyDown(AEntrada: IEntrada; var AKey: Word; AShift: TShiftState);
     class procedure PressKey(AEntrada: IEntrada; var AKey: Char);
     class procedure Enter(const AEntrada: IEntrada); overload;
     class procedure Enter(const APilha: IPilha; const AEntrada: string); overload;
@@ -188,6 +192,7 @@ type
     constructor Create(const AValue: string); overload;
     constructor Create(const AValue: Extended); overload;
     class function IsValid(const AValue: string): Boolean;
+    class function TrocaSinal(const AValue: string): string;
   end;
 
   TElementoPercentual = class(TElementoPilha, IUnarioOperacao, IBinarioOperacao, IToNumero, IToNumeroRelativo)
@@ -209,6 +214,7 @@ type
     constructor Create(const AValue: string); overload;
     constructor Create(const AValue: Extended); overload;
     class function IsValid(const AValue: string): Boolean;
+    class function TrocaSinal(const AValue: string): string;
   end;
 
   TNo = (noNenhum, noRaiz, noGeral, noPilha, noMatematica, noComum,
@@ -247,15 +253,15 @@ const
     //Pilha
     (Operacao: opDup; Nome: 'Dup'; Classe: TOperacaoPilha; No: noPilha; Imagem: 2; Botao: boPilha; Dica: 'Duplica o primeiro item da pilha (atalho: [Enter] com entrada vazia)'),
     (Operacao: opDrop; Nome: 'Drop'; Classe: TOperacaoPilha; No: noPilha; Imagem: 3; Botao: boPilha; Dica: 'Apaga o primeiro item da pilha (atalho: [BkSpace] com entrada vazia)'),
-    (Operacao: opClear; Nome: 'Clear'; Classe: TOperacaoPilha; No: noPilha; Imagem: 18; Botao: boPilha; Dica: 'Apaga todos os itens da pilha'),
-    (Operacao: opEdit; Nome: 'Edit'; Classe: TOperacaoPilha; No: noPilha; Imagem: 16; Botao: boPilha; Dica: 'Edita o primeiro item da pilha'),
-    (Operacao: opSwap; Nome: 'Swap'; Classe: TOperacaoPilha; No: noPilha; Imagem: 17; Botao: boPilha; Dica: 'Troca o primeiro item da pilha com o segundo'),
+    (Operacao: opClear; Nome: 'Clear'; Classe: TOperacaoPilha; No: noPilha; Imagem: 18; Botao: boPilha; Dica: 'Apaga todos os itens da pilha (atalho: [Esc] com entrada vazia)'),
+    (Operacao: opEdit; Nome: 'Edit'; Classe: TOperacaoPilha; No: noPilha; Imagem: 16; Botao: boPilha; Dica: 'Edita o primeiro item da pilha (atalho: [Seta Abaixo] com entrada vazia)'),
+    (Operacao: opSwap; Nome: 'Swap'; Classe: TOperacaoPilha; No: noPilha; Imagem: 17; Botao: boPilha; Dica: 'Troca o primeiro item da pilha com o segundo (atalho: [Seta Direita] com entrada vazia ou [Ctrl]+[Seta Direita] em qualquer situação)'),
     //Geral
     (Operacao: opAdd; Nome: 'Add'; Classe: TOperacaoBinario; No: noGeral; Imagem: 4; Botao: boComum; Dica: 'Soma (atalho: [+])'),
     (Operacao: opSub; Nome: 'Sub'; Classe: TOperacaoBinario; No: noGeral; Imagem: 5; Botao: boComum; Dica: 'Subtração (atalho: [-])'),
     (Operacao: opMul; Nome: 'Mul'; Classe: TOperacaoBinario; No: noGeral; Imagem: 6; Botao: boComum; Dica: 'Multiplicação (atalho: [*])'),
     (Operacao: opDiv; Nome: 'Div'; Classe: TOperacaoBinario; No: noGeral; Imagem: 7; Botao: boComum; Dica: 'Divisão (atalho: [/])'),
-    (Operacao: opChS; Nome: 'ChS'; Classe: TOperacaoUnario; No: noGeral; Imagem: 9; Botao: boComum; Dica: 'Troca o sinal (atalho: [.])'),
+    (Operacao: opChS; Nome: 'ChS'; Classe: TOperacaoUnario; No: noGeral; Imagem: 9; Botao: boComum; Dica: 'Troca o sinal (atalho: [Seta Acima] com entrada vazia, ou [Seta Acima] sobre o número perto do cursor)'),
     //Comum
     (Operacao: opInv; Nome: 'Inv'; Classe: TOperacaoUnario; No: noComum; Imagem: 15; Botao: boComum; Dica: 'Inverso 1/x'),
     (Operacao: opPow; Nome: 'Pow'; Classe: TOperacaoBinario; No: noComum; Imagem: 8; Botao: boComum; Dica: 'Potência (atalho: [^])'),
@@ -394,6 +400,53 @@ begin
     Enter(APilha, LRestoEntrada)
 end;
 
+class procedure TFabricaElemento.KeyDown(AEntrada: IEntrada;
+  var AKey: Word; AShift: TShiftState);
+begin
+  if (AKey = VK_RIGHT) and ((AEntrada.Texto = '') or (AShift = [ssCtrl])) then
+  begin
+    if AEntrada.Texto = '' then
+      AEntrada.Texto := 'Swap'
+    else
+      AEntrada.Texto := AEntrada.Texto + ' Swap';
+    Enter(AEntrada);
+    AKey := 0;
+  end
+  else if AKey = VK_ESCAPE then
+  begin
+    if AEntrada.Texto = '' then
+    begin
+      AEntrada.Texto := 'Clear';
+      Enter(AEntrada);
+    end
+    else
+      AEntrada.Texto := '';
+    AKey := 0;
+  end
+  else if (AKey = VK_DOWN) and (AEntrada.Texto = '') then
+  begin
+    AEntrada.Texto := 'Edit';
+    Enter(AEntrada);
+    AKey := 0;
+  end
+  else if (AKey = VK_UP) and (AEntrada.Texto = '') then
+  begin
+    AEntrada.Texto := 'ChS';
+    Enter(AEntrada);
+    AKey := 0;
+  end
+  else if (AKey = VK_UP) and (TElementoNumero.IsValid(AEntrada.SobCursor)) then
+  begin
+    AEntrada.SobCursor := TElementoNumero.TrocaSinal(AEntrada.SobCursor);
+    AKey := 0;
+  end
+  else if (AKey = VK_UP) and (TElementoPercentual.IsValid(AEntrada.SobCursor)) then
+  begin
+    AEntrada.SobCursor := TElementoPercentual.TrocaSinal(AEntrada.SobCursor);
+    AKey := 0;
+  end;
+end;
+
 class procedure TFabricaElemento.PressKey(AEntrada: IEntrada;
   var AKey: Char);
 var
@@ -401,6 +454,8 @@ var
   LEntrada: string;
 begin
   LEntrada := '';
+  if AKey = ThousandSeparator then
+    AKey := DecimalSeparator;
   case AKey of
     #8:
       if AEntrada.Texto = '' then
@@ -409,7 +464,6 @@ begin
     '-': LEntrada := 'Sub';
     '*': LEntrada := 'Mul';
     '/': LEntrada := 'Div';
-    '.': LEntrada := 'ChS';
     '^': LEntrada := 'Pow';
   end;
   LEnter := (LEntrada <> '') or (AKey = #13);
@@ -637,6 +691,7 @@ end;
 
 constructor TElementoNumero.Create(const AValue: string);
 begin
+  Assert(IsValid(AValue), 'Não é um Número válido');
   Create(StrToFloat(AValue));
 end;
 
@@ -727,6 +782,19 @@ end;
 function TElementoNumero.ToString: string;
 begin
   Result := FloatToStr(FNumero);
+end;
+
+class function TElementoNumero.TrocaSinal(const AValue: string): string;
+var
+  LNumero: IElementoPilha;
+  LOperacao: IOperacao;
+begin
+  Result := AValue;
+  LNumero := Create(AValue);
+  LOperacao := TOperacaoUnario.Create;
+  LOperacao.TipoOperacao := opChS;
+  (LNumero as IUnarioOperacao).OperacaoUnario(LOperacao);
+  Result := LNumero.ToString;
 end;
 
 { TElementoPercentual }
@@ -837,6 +905,20 @@ end;
 function TElementoPercentual.ToString: string;
 begin
   Result := FloatToStr(FPercentual * 100) + '%';
+end;
+
+class function TElementoPercentual.TrocaSinal(
+  const AValue: string): string;
+var
+  LPercentual: IElementoPilha;
+  LOperacao: IOperacao;
+begin
+  Result := AValue;
+  LPercentual := Create(AValue);
+  LOperacao := TOperacaoUnario.Create;
+  LOperacao.TipoOperacao := opChS;
+  (LPercentual as IUnarioOperacao).OperacaoUnario(LOperacao);
+  Result := LPercentual.ToString;
 end;
 
 end.
