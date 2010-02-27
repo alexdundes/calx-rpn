@@ -92,7 +92,6 @@ procedure TPrincipalForm.Carrega;
       if NoDefinicoes[laco1].Pai = ANo then
       begin
         atual := OperacaoTreeView.Items.AddChild(ANode, NoDefinicoes[laco1].Nome);
-        InclueNo(laco1, atual);
         for laco2 := Low(TTipoOperacao) to High(TTipoOperacao) do
           if Operacoes[laco2].No = laco1 then
           begin
@@ -100,6 +99,7 @@ procedure TPrincipalForm.Carrega;
             operacao.ImageIndex := Operacoes[laco2].Imagem;
             operacao.SelectedIndex := Operacoes[laco2].Imagem;
           end;
+        InclueNo(laco1, atual);
       end;
   end;
 
