@@ -8,13 +8,22 @@ uses
 type
   TTipoOperacao = (
     //Pilha
-    opDup, opDrop, opClear, opEdit, opSwap,
+    opDup, opDrop, opClear, opEdit, opSwap, opRot, opOver, opPick3, opUnRot,
+    opDepth, opDup2, opDupN, opDupDup, opNDup, opDrop2, opDropN, opPick, opRoll,
+    opRollD,
     //Geral
     opAdd, opSub, opMul, opDiv, opChS,
     //Comum
     opInv, opPow, opPerc, opSqr, opSqRt,
     //Trigonometria
-    opPi, opSin, opCos, opTan, opASin, opACos, opATan,
+    opPi, opSin, opCos, opTan, opASin, opACos, opATan, opSinCos, opCot, opSec,
+    opCsc, opACot, opASec, opACsc, opRadToDeg, opRadToGrad, opRadToCycle,
+    opDegToRad, opDegToGrad, opDegToCycle, opGradToRad, opGradToDeg,
+    opGradToCycle, opCycleToRad, opCycleToDeg, opCycleToGrad, opSinH, opCosH,
+    opTanH, opCotH, opSecH, opCscH, opASinH, opACosH, opATanH, opACotH, opASecH,
+    opACscH, opHypot,
+    //Logarítimo
+    opE, opExp, opLN, opPow10, opLog10, opPow2, opLog2, opLogN,
     //Configuracao
     opAbout);
 
@@ -175,7 +184,12 @@ type
     function NumeroRelativo(const AValue: Extended; const AOperacao: IOperacao): Extended;
   end;
 
-  TElementoNumero = class(TElementoPilha, IUnarioOperacao, IBinarioOperacao, IToNumero)
+  IToInteiro = interface
+    ['{A1C794F8-A7DB-4EC7-A92E-3E995BF724BA}']
+    function Inteiro: Integer;
+  end;
+
+  TElementoNumero = class(TElementoPilha, IUnarioOperacao, IBinarioOperacao, IToNumero, IToInteiro)
   private
     FNumero: Extended;
   protected
@@ -188,6 +202,8 @@ type
     function OperacaoBinario(AOperacao: IOperacao; AElemento: IElementoPilha): IElementoPilha;
     { IToNumero }
     function Numero: Extended;
+    { IToInteiro }
+    function Inteiro: Integer;
   public
     constructor Create(const AValue: string); overload;
     constructor Create(const AValue: Extended); overload;
@@ -218,7 +234,8 @@ type
   end;
 
   TNo = (noNenhum, noRaiz, noGeral, noPilha, noMatematica, noComum,
-    noTrigonometria, noConfiguracao);
+    noTrigonometria, noTrigonometriaComum, noTrigonometriaConversao,
+    noTrigonometriaHiperbolica, noLogaritimo, noConfiguracao);
 
   TBotao = (boNao, boPilha, boComum);
 
@@ -246,6 +263,10 @@ const
     (Nome: 'Matemática'; Pai: noRaiz),
     (Nome: 'Comum'; Pai: noMatematica),
     (Nome: 'Trigonometria'; Pai: noMatematica),
+    (Nome: 'Comum'; Pai: noTrigonometria),
+    (Nome: 'Conversão'; Pai: noTrigonometria),
+    (Nome: 'Hiperbólica'; Pai: noTrigonometria),
+    (Nome: 'Logarítimo'; Pai: noMatematica),
     (Nome: 'Configuração'; Pai: noRaiz)
   );
 
@@ -256,6 +277,20 @@ const
     (Operacao: opClear; Nome: 'Clear'; Classe: TOperacaoPilha; No: noPilha; Imagem: 18; Botao: boPilha; Dica: 'Apaga todos os itens da pilha (atalho: [Esc] com entrada vazia)'),
     (Operacao: opEdit; Nome: 'Edit'; Classe: TOperacaoPilha; No: noPilha; Imagem: 16; Botao: boPilha; Dica: 'Edita o primeiro item da pilha (atalho: [Seta Abaixo] com entrada vazia)'),
     (Operacao: opSwap; Nome: 'Swap'; Classe: TOperacaoPilha; No: noPilha; Imagem: 17; Botao: boPilha; Dica: 'Troca o primeiro item da pilha com o segundo (atalho: [Seta Direita] com entrada vazia ou [Ctrl]+[Seta Direita] em qualquer situação)'),
+    (Operacao: opRot; Nome: 'Rot'; Classe: TOperacaoPilha; No: noPilha; Imagem: 19; Botao: boPilha; Dica: 'Gira os 3 primeiros itens x->y->z->x (equivale a 3 Roll)'),
+    (Operacao: opOver; Nome: 'Over'; Classe: TOperacaoPilha; No: noPilha; Imagem: 21; Botao: boPilha; Dica: 'Duplica o segundo item da pilha (equivale a 2 Pick)'),
+    (Operacao: opPick3; Nome: 'Pick3'; Classe: TOperacaoPilha; No: noPilha; Imagem: 22; Botao: boPilha; Dica: 'Duplica o terceiro item da pilha (equivale a 3 Pick)'),
+    (Operacao: opUnRot; Nome: 'UnRot'; Classe: TOperacaoPilha; No: noPilha; Imagem: 20; Botao: boPilha; Dica: 'Gira, para baixo, os 3 primeiros itens x->z->y->x (equivale a 3 RollD)'),
+    (Operacao: opDepth; Nome: 'Depth'; Classe: TOperacaoPilha; No: noPilha; Imagem: 23; Botao: boPilha; Dica: 'Delvolve o número de itens da pilha'),
+    (Operacao: opDup2; Nome: 'Dup2'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Duplica o primeiro e o segundo item da Pilha (equivale a 2 DupN)'),
+    (Operacao: opDupN; Nome: 'DupN'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Duplica até o n-ésimo item da pilha'),
+    (Operacao: opNDup; Nome: 'NDup'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Duplica n vezes o primeiro item da pilha'),
+    (Operacao: opDupDup; Nome: 'DupDup'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Duplica 2 vezes o primeiro item da pilha (equivalente a 2 NDup)'),
+    (Operacao: opDrop2; Nome: 'Drop2'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Apaga o primeiro e o segundo item da pilha (equivale a 2 DropN)'),
+    (Operacao: opDropN; Nome: 'DropN'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Apaga até o n-ésimo item da pilha'),
+    (Operacao: opPick; Nome: 'Pick'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Duplica o n-ésimo item da pilha'),
+    (Operacao: opRoll; Nome: 'Roll'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Gira, para cima, os n itens da pilha'),
+    (Operacao: opRollD; Nome: 'RollD'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Gira, para baixo, os n itens da pilha'),
     //Geral
     (Operacao: opAdd; Nome: 'Add'; Classe: TOperacaoBinario; No: noGeral; Imagem: 4; Botao: boComum; Dica: 'Soma (atalho: [+])'),
     (Operacao: opSub; Nome: 'Sub'; Classe: TOperacaoBinario; No: noGeral; Imagem: 5; Botao: boComum; Dica: 'Subtração (atalho: [-])'),
@@ -269,13 +304,54 @@ const
     (Operacao: opSqr; Nome: 'Sqr'; Classe: TOperacaoUnario; No: noComum; Imagem: 11; Botao: boComum; Dica: 'Quadrado x^2'),
     (Operacao: opSqRt; Nome: 'SqRt'; Classe: TOperacaoUnario; No: noComum; Imagem: 12; Botao: boComum; Dica: 'Raiz Quadrada x^(1/2)'),
     //Trigonometria
-    (Operacao: opPi; Nome: 'Pi'; Classe: TOperacaoConstante; No: noTrigonometria; Imagem: 13; Botao: boNao; Dica: 'constante - número pi'),
-    (Operacao: opSin; Nome: 'Sin'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'seno de x'),
-    (Operacao: opCos; Nome: 'Cos'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'cosseno de x'),
-    (Operacao: opTan; Nome: 'Tan'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'tangente de x'),
-    (Operacao: opASin; Nome: 'ASin'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco seno de x'),
-    (Operacao: opACos; Nome: 'ACos'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco cosseno de x'),
-    (Operacao: opATan; Nome: 'ATan'; Classe: TOperacaoUnario; No: noTrigonometria; Imagem: 1; Botao: boNao; Dica: 'arco tangente de x'),
+    (Operacao: opPi; Nome: 'Pi'; Classe: TOperacaoConstante; No: noTrigonometriaComum; Imagem: 13; Botao: boNao; Dica: 'constante - número pi'),
+    (Operacao: opSin; Nome: 'Sin'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'seno de x'),
+    (Operacao: opCos; Nome: 'Cos'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'cosseno de x'),
+    (Operacao: opTan; Nome: 'Tan'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'tangente de x'),
+    (Operacao: opASin; Nome: 'ASin'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'arco seno de x'),
+    (Operacao: opACos; Nome: 'ACos'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'arco cosseno de x'),
+    (Operacao: opATan; Nome: 'ATan'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'arco tangente de x'),
+    (Operacao: opSinCos; Nome: 'SinCos'; Classe: TOperacaoPilha; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'seno e o cosseno de x (x Dup Sin Swap Cos)'),
+    (Operacao: opCot; Nome: 'Cot'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'cotangente de x (x Tan Inv)'),
+    (Operacao: opSec; Nome: 'Sec'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'secante de x (x Cos Inv)'),
+    (Operacao: opCsc; Nome: 'Csc'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'cossecante de x (x Sin Inv)'),
+    (Operacao: opACot; Nome: 'ACot'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'arco cotangente de x'),
+    (Operacao: opASec; Nome: 'ASec'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'arco secante de x'),
+    (Operacao: opACsc; Nome: 'ACsc'; Classe: TOperacaoUnario; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'arco cossecante de x'),
+    (Operacao: opRadToDeg; Nome: 'RadToDeg'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'radianos para graus'),
+    (Operacao: opRadToGrad; Nome: 'RadToGrad'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'radianos para gradianos'),
+    (Operacao: opRadToCycle; Nome: 'RadToCycle'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'radianos para ciclos'),
+    (Operacao: opDegToRad; Nome: 'DegToRad'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'graus para radianos'),
+    (Operacao: opDegToGrad; Nome: 'DegToGrad'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'graus para gradianos'),
+    (Operacao: opDegToCycle; Nome: 'DegToCycle'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'graus para ciclos'),
+    (Operacao: opGradToRad; Nome: 'GradToRad'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'gradianos para radianos'),
+    (Operacao: opGradToDeg; Nome: 'GradToDeg'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'gradianos para graus'),
+    (Operacao: opGradToCycle; Nome: 'GradToCycle'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'gradianos para ciclos'),
+    (Operacao: opCycleToRad; Nome: 'CycleToRad'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'ciclos para radianos'),
+    (Operacao: opCycleToDeg; Nome: 'CycleToDeg'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'ciclos para graus'),
+    (Operacao: opCycleToGrad; Nome: 'CycleToGrad'; Classe: TOperacaoUnario; No: noTrigonometriaConversao; Imagem: 1; Botao: boNao; Dica: 'ciclos para gradianos'),
+    (Operacao: opSinH; Nome: 'SinH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'seno hiperbólico de x'),
+    (Operacao: opCosH; Nome: 'CosH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'cosseno hiperbólico de x'),
+    (Operacao: opTanH; Nome: 'TanH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'tangente hiperbólica de x'),
+    (Operacao: opCotH; Nome: 'CotH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'cotangente hiperbólica de x'),
+    (Operacao: opSecH; Nome: 'SecH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'secante hiperbólica de x'),
+    (Operacao: opCscH; Nome: 'CscH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'cossecante hiperbólica de x'),
+    (Operacao: opASinH; Nome: 'ASinH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'arco seno hiperbólico de x'),
+    (Operacao: opACosH; Nome: 'ACosH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'arco cosseno hiperbólico de x'),
+    (Operacao: opATanH; Nome: 'ATanH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'arco tangente hiperbólica de x'),
+    (Operacao: opACotH; Nome: 'ACotH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'arco cotangente hiperbólica de x'),
+    (Operacao: opASecH; Nome: 'ASecH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'arco secante hiperbólica de x'),
+    (Operacao: opACscH; Nome: 'ACscH'; Classe: TOperacaoUnario; No: noTrigonometriaHiperbolica; Imagem: 1; Botao: boNao; Dica: 'arco cossecante hiperbólica de x'),
+    (Operacao: opHypot; Nome: 'Hypot'; Classe: TOperacaoPilha; No: noTrigonometriaComum; Imagem: 1; Botao: boNao; Dica: 'hipotenusa de x e y (y x Sqr Swap Sqr Add Sqrt)'),
+    //Logarítimo
+    (Operacao: opE; Nome: 'e'; Classe: TOperacaoConstante; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: 'constante "e" número natural'),
+    (Operacao: opExp; Nome: 'Exp'; Classe: TOperacaoUnario; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: 'e elevado a x (e x Pow)'),
+    (Operacao: opLN; Nome: 'LN'; Classe: TOperacaoUnario; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: 'logarítimo natural (na base "e")'),
+    (Operacao: opPow10; Nome: 'Pow10'; Classe: TOperacaoUnario; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: '10 elevado a x (10 x Pow)'),
+    (Operacao: opLog10; Nome: 'Log10'; Classe: TOperacaoUnario; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: 'logarítimo na base 10'),
+    (Operacao: opPow2; Nome: 'Pow2'; Classe: TOperacaoUnario; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: '2 elevado a x (2 x Pow)'),
+    (Operacao: opLog2; Nome: 'Log2'; Classe: TOperacaoUnario; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: 'logarítimo na base 2'),
+    (Operacao: opLogN; Nome: 'LogN'; Classe: TOperacaoBinario; No: noLogaritimo; Imagem: 1; Botao: boNao; Dica: 'logarítimo de y na base x'),
     //Configuracao
     (Operacao: opAbout; Nome: 'About'; Classe: TOperacaoPilha; No: noConfiguracao; Imagem: 14; Botao: boNao; Dica: 'Sobre o Calx (este programa)')
   );
@@ -580,39 +656,192 @@ end;
 procedure TOperacaoPilha.Executa;
 var
   LPilha: IPilha;
-  LElemento1, LElemento2: IElementoPilha;
+  LElementos: array of IElementoPilha;
+  i, n: Integer;
+
+  procedure VerificaQuantidade(AQuantidade: Integer);
+  begin
+    if LPilha.Count < AQuantidade then
+      if AQuantidade = 1 then
+        raise Exception.Create('A pilha está vazia')
+      else
+        raise Exception.Create('É necessário 2 itens na pilha');
+  end;
+
+  function RetornaQuantidadePrimeiroItem: Integer;
+  var
+    LToInteiro: IToInteiro;
+  begin
+    VerificaQuantidade(1);
+    if not Supports(LPilha[0], IToInteiro, LToInteiro) then
+      raise Exception.Create('Primeiro item deve ser um número');
+    Result := LToInteiro.Inteiro;
+  end;
+
+  function VerificaAcimaDeUm(AQuantidade: Integer): Integer;
+  begin
+    if AQuantidade < 1 then
+      raise Exception.Create('Quantidade deve ser igual ou maior a 1');
+    Result := AQuantidade;
+  end;
+
+  procedure DoSinCos;
+  var
+    x, y: Extended;
+    LToNumero: IToNumero;
+  begin
+    VerificaQuantidade(1);
+    if not Supports(LPilha[0], IToNumero, LToNumero) then
+      raise Exception.Create('Primeiro item deve ser um número');
+    SinCos(LToNumero.Numero, y, x);
+    LPilha.Pop;
+    LPilha.Push(TElementoNumero.Create(y));
+    LPilha.Push(TElementoNumero.Create(x));
+  end;
+
+  procedure DoHypot;
+  var
+    hipotenusa: Extended;
+    cateto1, cateto2: IToNumero;
+  begin
+    VerificaQuantidade(2);
+    if not Supports(LPilha[0], IToNumero, cateto1) then
+      raise Exception.Create('Primeiro item deve ser um número');
+    if not Supports(LPilha[1], IToNumero, cateto2) then
+      raise Exception.Create('Segundo item deve ser um número');
+    hipotenusa := Hypot(cateto1.Numero, cateto2.Numero);
+    LPilha.Pop;
+    LPilha.Pop;
+    LPilha.Push(TElementoNumero.Create(hipotenusa));
+  end;
+
 begin
   LPilha := GetPilha;
   case GetTipoOperacao of
     opDup: begin
-      if LPilha.Count < 1 then
-        raise Exception.Create('A pilha está vazia');
-      LElemento1 := LPilha[0];
-      LElemento2 := LElemento1.Clone;
-      LPilha.Push(LElemento2);
+      VerificaQuantidade(1);
+      LPilha.Push(LPilha[0].Clone);
     end;
     opDrop: begin
-      if LPilha.Count < 1 then
-        raise Exception.Create('A pilha está vazia');
+      VerificaQuantidade(1);
       LPilha.Pop;
     end;
-    opClear: begin
-      LPilha.Clear;
-    end;
+    opClear: LPilha.Clear;
     opEdit: begin
-      if LPilha.Count < 1 then
-        raise Exception.Create('A pilha está vazia');
-      LElemento1 := LPilha.Pop;
-      LPilha.Entrada.Texto := LElemento1.ToString;
+      VerificaQuantidade(1);
+      LPilha.Entrada.Texto := LPilha.Pop.ToString;
     end;
     opSwap: begin
-      if LPilha.Count < 2 then
-        raise Exception.Create('É necessário 2 itens na pilha');
-      LElemento1 := LPilha.Pop;
-      LElemento2 := LPilha.Pop;
-      LPilha.Push(LElemento1);
-      LPilha.Push(LElemento2);
+      VerificaQuantidade(2);
+      SetLength(LElementos, 2);
+      LElementos[0] := LPilha.Pop;
+      LElementos[1] := LPilha.Pop;
+      LPilha.Push(LElementos[0]);
+      LPilha.Push(LElementos[1]);
     end;
+    opRot: begin
+      VerificaQuantidade(3);
+      SetLength(LElementos, 3);
+      LElementos[0] := LPilha.Pop;
+      LElementos[1] := LPilha.Pop;
+      LElementos[2] := LPilha.Pop;
+      LPilha.Push(LElementos[1]);
+      LPilha.Push(LElementos[0]);
+      LPilha.Push(LElementos[2]);
+    end;
+    opUnRot: begin
+      VerificaQuantidade(3);
+      SetLength(LElementos, 3);
+      LElementos[0] := LPilha.Pop;
+      LElementos[1] := LPilha.Pop;
+      LElementos[2] := LPilha.Pop;
+      LPilha.Push(LElementos[0]);
+      LPilha.Push(LElementos[2]);
+      LPilha.Push(LElementos[1]);
+    end;
+    opDepth: LPilha.Push(TElementoNumero.Create(LPilha.Count));
+    opDup2: begin
+      VerificaQuantidade(2);
+      SetLength(LElementos, 2);
+      LElementos[1] := LPilha[1].Clone;
+      LElementos[0] := LPilha[0].Clone;
+      LPilha.Push(LElementos[1]);
+      LPilha.Push(LElementos[0]);
+    end;
+    opDupN: begin
+      n := RetornaQuantidadePrimeiroItem;
+      VerificaQuantidade(VerificaAcimaDeUm(n) + 1);
+      LPilha.Pop;
+      SetLength(LElementos, n);
+      for i := n - 1 downto 0 do
+        LElementos[i] := LPilha[i].Clone;
+      for i := n - 1 downto 0 do
+        LPilha.Push(LElementos[i]);
+    end;
+    opNDup: begin
+      n := RetornaQuantidadePrimeiroItem;
+      VerificaAcimaDeUm(n);
+      LPilha.Pop;
+      SetLength(LElementos, 1);
+      LElementos[0] := LPilha[0].Clone;
+      for i := n - 1 downto 0 do
+        LPilha.Push(LElementos[0]);
+    end;
+    opDupDup: begin
+      VerificaQuantidade(1);
+      LPilha.Push(LPilha[0].Clone);
+      LPilha.Push(LPilha[1].Clone);
+    end;
+    opDrop2: begin
+      VerificaQuantidade(2);
+      LPilha.Pop;
+      LPilha.Pop;
+    end;
+    opDropN: begin
+      n := RetornaQuantidadePrimeiroItem;
+      VerificaQuantidade(VerificaAcimaDeUm(n) + 1);
+      LPilha.Pop;
+      for i := n - 1 downto 0 do
+        LPilha.Pop;
+    end;
+    opOver: begin
+      VerificaQuantidade(2);
+      LPilha.Push(LPilha[1].Clone);
+    end;
+    opPick: begin
+      n := RetornaQuantidadePrimeiroItem;
+      VerificaQuantidade(VerificaAcimaDeUm(n) + 1);
+      LPilha.Pop;
+      LPilha.Push(LPilha[n - 1].Clone);
+    end;
+    opPick3: begin
+      VerificaQuantidade(3);
+      LPilha.Push(LPilha[2].Clone);
+    end;
+    opRoll: begin
+      n := RetornaQuantidadePrimeiroItem;
+      VerificaQuantidade(VerificaAcimaDeUm(n) + 1);
+      LPilha.Pop;
+      SetLength(LElementos, n);
+      for i := 0 to n - 1 do
+        LElementos[i] := LPilha.Pop;
+      for i := n - 2 downto 0 do
+        LPilha.Push(LElementos[i]);
+      LPilha.Push(LElementos[n - 1]);
+    end;
+    opRollD: begin
+      n := RetornaQuantidadePrimeiroItem;
+      VerificaQuantidade(VerificaAcimaDeUm(n) + 1);
+      LPilha.Pop;
+      SetLength(LElementos, n);
+      for i := 0 to n - 1 do
+        LElementos[i] := LPilha.Pop;
+      LPilha.Push(LElementos[0]);
+      for i := n - 1 downto 1 do
+        LPilha.Push(LElementos[i]);
+    end;
+    opSinCos: DoSinCos;
+    opHypot: DoHypot;
     opAbout: LPilha.Entrada.About;
   else
     raise Exception.Create('A pilha não suporta este tipo de operacao');
@@ -625,6 +854,7 @@ procedure TOperacaoConstante.Executa;
 begin
   case GetTipoOperacao of
     opPi: GetPilha.Push(TElementoNumero.Create(Pi));
+    opE: GetPilha.Push(TElementoNumero.Create(Exp(1)));
   else
     raise Exception.Create('Constante inexistente');
   end;
@@ -711,6 +941,13 @@ begin
   ARect.Bottom := ARect.Bottom - ACanvas.TextHeight(LNumero) - 2;
 end;
 
+function TElementoNumero.Inteiro: Integer;
+begin
+  if (Frac(FNumero) <> 0) or (FNumero > MaxInt) then
+    raise Exception.CreateFmt('Não é possível converter "%f" para um número inteiro', [FNumero]);
+  Result := Trunc(FNumero);
+end;
+
 class function TElementoNumero.IsValid(const AValue: string): Boolean;
 var
   LNumero: Extended;
@@ -741,6 +978,7 @@ begin
     opMul: FNumero := FNumero * ASegundoValor;
     opDiv: FNumero := FNumero / ASegundoValor;
     opPow: FNumero := Power(FNumero, ASegundoValor);
+    opLogN: FNumero := LogN(ASegundoValor, FNumero);
   else
     raise Exception.Create('Primeiro parâmetro não suporta este tipo de operação');
   end;
@@ -773,6 +1011,42 @@ begin
     opASin: FNumero := ArcSin(FNumero);
     opACos: FNumero := ArcCos(FNumero);
     opATan: FNumero := ArcTan(FNumero);
+    opCot: FNumero := Cotan(FNumero);
+    opSec: FNumero := Secant(FNumero);
+    opCsc: FNumero := Cosecant(FNumero);
+    opACot: FNumero := ArcCot(FNumero);
+    opASec: FNumero := ArcSec(FNumero);
+    opACsc: FNumero := ArcCsc(FNumero);
+    opRadToDeg: FNumero := RadToDeg(FNumero);
+    opRadToGrad: FNumero := RadToGrad(FNumero);
+    opRadToCycle: FNumero := RadToCycle(FNumero);
+    opDegToRad: FNumero := DegToRad(FNumero);
+    opDegToGrad: FNumero := DegToGrad(FNumero);
+    opDegToCycle: FNumero := DegToCycle(FNumero);
+    opGradToRad: FNumero := GradToRad(FNumero);
+    opGradToDeg: FNumero := GradToDeg(FNumero);
+    opGradToCycle: FNumero := GradToCycle(FNumero);
+    opCycleToRad: FNumero := CycleToRad(FNumero);
+    opCycleToDeg: FNumero := CycleToDeg(FNumero);
+    opCycleToGrad: FNumero := CycleToGrad(FNumero);
+    opSinH: FNumero := Sinh(FNumero);
+    opCosH: FNumero := Cosh(FNumero);
+    opTanH: FNumero := Tanh(FNumero);
+    opCotH: FNumero := CotH(FNumero);
+    opSecH: FNumero := SecH(FNumero);
+    opCscH: FNumero := CscH(FNumero);
+    opASinH: FNumero := ArcSinh(FNumero);
+    opACosH: FNumero := ArcCosh(FNumero);
+    opATanH: FNumero := ArcTanh(FNumero);
+    opACotH: FNumero := ArcCotH(FNumero);
+    opASecH: FNumero := ArcSecH(FNumero);
+    opACscH: FNumero := ArcCscH(FNumero);
+    opExp: FNumero := Exp(FNumero);
+    opLN: FNumero := Ln(FNumero);
+    opPow10: FNumero := Power(10, FNumero);
+    opLog10: FNumero := Log10(FNumero);
+    opPow2: FNumero := Power(2, FNumero);
+    opLog2: FNumero := Log2(FNumero);
   else
     raise Exception.Create('Parâmetro não suporta este tipo de operação');
   end;
@@ -788,13 +1062,32 @@ class function TElementoNumero.TrocaSinal(const AValue: string): string;
 var
   LNumero: IElementoPilha;
   LOperacao: IOperacao;
+  posicaoE: Integer;
 begin
   Result := AValue;
-  LNumero := Create(AValue);
+  posicaoE := Pos('E', UpperCase(AValue));
+  if posicaoE > 0 then
+  begin
+    Result := Copy(AValue, posicaoE + 1, MaxInt);
+    if Result = '' then
+    begin
+      Result := AValue + '-';
+      Exit;
+    end;
+    if not IsValid(Result) then
+    begin
+      Result := AValue;
+      Exit;
+    end;
+  end;
+  LNumero := Create(Result);
   LOperacao := TOperacaoUnario.Create;
   LOperacao.TipoOperacao := opChS;
   (LNumero as IUnarioOperacao).OperacaoUnario(LOperacao);
-  Result := LNumero.ToString;
+  if posicaoE > 0 then
+    Result := Copy(AValue, 1, posicaoE) + LNumero.ToString
+  else
+    Result := LNumero.ToString;
 end;
 
 { TElementoPercentual }
@@ -887,7 +1180,7 @@ begin
       FPercentual := 1/FPercentual;
     end;
     opPerc: FPercentual := FPercentual / 100;
-    opSQR: FPercentual := Sqr(FPercentual);
+    opSqr: FPercentual := Sqr(FPercentual);
     opSqRt: begin
       if FPercentual < 0 then
         raise Exception.Create('Não é possível extrair raiz quadrada de número negativo');

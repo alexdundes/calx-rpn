@@ -25,7 +25,7 @@ type
   end;
 
 const
-  Titulo = 'Calx-RPN V. 0.04';
+  Titulo = 'Calx-RPN V. 0.05';
 
 implementation
 
