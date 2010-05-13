@@ -3,14 +3,14 @@ unit uCalx;
 interface
 
 uses
-  SysUtils, Classes, Windows, Types, Graphics, Math;
+  SysUtils, Classes, Windows, Types, Graphics, Math, Clipbrd;
 
 type
   TTipoOperacao = (
     //Pilha
     opDup, opDrop, opClear, opEdit, opSwap, opRot, opOver, opPick3, opUnRot,
     opDepth, opDup2, opDupN, opDupDup, opNDup, opDrop2, opDropN, opPick, opRoll,
-    opRollD,
+    opRollD, opCopy, opCut,
     //Geral
     opAdd, opSub, opMul, opDiv, opChS,
     //Comum
@@ -291,6 +291,8 @@ const
     (Operacao: opPick; Nome: 'Pick'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Duplica o n-ésimo item da pilha'),
     (Operacao: opRoll; Nome: 'Roll'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Gira, para cima, os n itens da pilha'),
     (Operacao: opRollD; Nome: 'RollD'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Gira, para baixo, os n itens da pilha'),
+    (Operacao: opCopy; Nome: 'Copy'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Copia o primeiro item da pilha para a área de transferência (atalho: [Ctrl] + [c])'),
+    (Operacao: opCut; Nome: 'Cut'; Classe: TOperacaoPilha; No: noPilha; Imagem: 14; Botao: boNao; Dica: 'Retira o primeiro item da pilha e coloca na área de transferência (atalho: [Ctrl] + [x])'),
     //Geral
     (Operacao: opAdd; Nome: 'Add'; Classe: TOperacaoBinario; No: noGeral; Imagem: 4; Botao: boComum; Dica: 'Soma (atalho: [+])'),
     (Operacao: opSub; Nome: 'Sub'; Classe: TOperacaoBinario; No: noGeral; Imagem: 5; Botao: boComum; Dica: 'Subtração (atalho: [-])'),
@@ -519,6 +521,18 @@ begin
   else if (AKey = VK_UP) and (TElementoPercentual.IsValid(AEntrada.SobCursor)) then
   begin
     AEntrada.SobCursor := TElementoPercentual.TrocaSinal(AEntrada.SobCursor);
+    AKey := 0;
+  end
+  else if (AKey = Ord('C')) and (ssCtrl in AShift) and (AEntrada.Texto = '') then
+  begin
+    AEntrada.Texto := 'Copy';
+    Enter(AEntrada);
+    AKey := 0;
+  end
+  else if (AKey = Ord('X')) and (ssCtrl in AShift) and (AEntrada.Texto = '') then
+  begin
+    AEntrada.Texto := 'Cut';
+    Enter(AEntrada);
     AKey := 0;
   end;
 end;
@@ -843,6 +857,14 @@ begin
     opSinCos: DoSinCos;
     opHypot: DoHypot;
     opAbout: LPilha.Entrada.About;
+    opCopy: begin
+      VerificaQuantidade(1);
+      Clipboard.AsText := LPilha[0].ToString;
+    end;
+    opCut: begin
+      VerificaQuantidade(1);
+      Clipboard.AsText := LPilha.Pop.ToString;
+    end;
   else
     raise Exception.Create('A pilha não suporta este tipo de operacao');
   end;
