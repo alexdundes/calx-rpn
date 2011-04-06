@@ -387,7 +387,7 @@ procedure TPilha.Draw(ACanvas: TCanvas; ARect: TRect);
 var
   laco: Integer;
 begin
-  ACanvas.Pen.Color := clBlack;
+  ACanvas.Pen.Color := clWindowFrame;
   ACanvas.Brush.Color := clWindow;
   ACanvas.Rectangle(ARect);
   ARect := Rect(ARect.Left + 1, ARect.Top + 1, ARect.Right - 1, ARect.Bottom - 1);
