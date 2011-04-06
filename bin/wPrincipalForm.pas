@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uCalx, ExtCtrls, Buttons, ComCtrls, ImgList, ToolWin,
-  uAboutForm;
+  uAboutForm, XPMan;
 
 type
   TPrincipalForm = class(TForm, IEntrada)
@@ -17,9 +17,11 @@ type
     PilhaPaintBox: TPaintBox;
     EnterButton: TBitBtn;
     ImageList: TImageList;
-    AjudaText: TStaticText;
     ToolBarComum: TToolBar;
     ToolBarPilha: TToolBar;
+    XPManifest1: TXPManifest;
+    GroupBox1: TGroupBox;
+    AjudaText: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure PilhaPaintBoxPaint(Sender: TObject);
     procedure EnterButtonClick(Sender: TObject);

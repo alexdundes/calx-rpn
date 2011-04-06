@@ -1,8 +1,8 @@
 object PrincipalForm: TPrincipalForm
-  Left = 257
-  Top = 182
-  Width = 495
-  Height = 372
+  Left = 261
+  Top = 135
+  Width = 491
+  Height = 369
   Caption = 'Calx'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,28 +19,28 @@ object PrincipalForm: TPrincipalForm
     Left = 229
     Top = 0
     Width = 8
-    Height = 338
+    Height = 335
     Beveled = True
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 229
-    Height = 338
+    Height = 335
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
     DesignSize = (
       229
-      338)
+      335)
     object OperacaoTreeView: TTreeView
       Left = 5
       Top = 5
       Width = 219
-      Height = 279
+      Height = 256
       Anchors = [akLeft, akTop, akRight, akBottom]
       AutoExpand = True
-      Ctl3D = False
+      Ctl3D = True
       Images = ImageList
       Indent = 19
       ParentCtl3D = False
@@ -54,46 +54,51 @@ object PrincipalForm: TPrincipalForm
         00000550696C6861230000000000000000000000FFFFFFFFFFFFFFFF00000000
         000000000A4D6174656DE174696361}
     end
-    object AjudaText: TStaticText
-      Left = 6
-      Top = 289
-      Width = 218
-      Height = 43
+    object GroupBox1: TGroupBox
+      Left = 5
+      Top = 265
+      Width = 219
+      Height = 58
       Anchors = [akLeft, akRight, akBottom]
-      AutoSize = False
-      BorderStyle = sbsSingle
-      Caption = 
-        'asdasd asdasdad asdasdasd asdasdasd asdasdasd asdasdasd asdasdas' +
-        ' asdasda adasdasd asdasdas asdasdads asdasdadas'
+      Caption = 'Dica'
       TabOrder = 1
+      object AjudaText: TLabel
+        Left = 2
+        Top = 15
+        Width = 215
+        Height = 41
+        Align = alClient
+        Caption = 'AjudaText'
+        WordWrap = True
+      end
     end
   end
   object Panel2: TPanel
     Left = 237
     Top = 0
-    Width = 250
-    Height = 338
+    Width = 246
+    Height = 335
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
     DesignSize = (
-      250
-      338)
+      246
+      335)
     object PilhaPaintBox: TPaintBox
       Left = 5
       Top = 5
-      Width = 232
-      Height = 232
+      Width = 228
+      Height = 220
       Anchors = [akLeft, akTop, akRight, akBottom]
       OnPaint = PilhaPaintBoxPaint
     end
     object EntradaMemo: TMemo
       Left = 5
-      Top = 283
-      Width = 201
+      Top = 272
+      Width = 197
       Height = 50
       Anchors = [akLeft, akRight, akBottom]
-      Ctl3D = False
+      Ctl3D = True
       ParentCtl3D = False
       ScrollBars = ssVertical
       TabOrder = 0
@@ -101,8 +106,8 @@ object PrincipalForm: TPrincipalForm
       OnKeyPress = EntradaMemoKeyPress
     end
     object EnterButton: TBitBtn
-      Left = 210
-      Top = 283
+      Left = 206
+      Top = 272
       Width = 27
       Height = 50
       Anchors = [akRight, akBottom]
@@ -130,8 +135,8 @@ object PrincipalForm: TPrincipalForm
     end
     object ToolBarComum: TToolBar
       Left = 5
-      Top = 260
-      Width = 231
+      Top = 249
+      Width = 228
       Height = 22
       Align = alNone
       Anchors = [akLeft, akRight, akBottom]
@@ -145,8 +150,8 @@ object PrincipalForm: TPrincipalForm
     end
     object ToolBarPilha: TToolBar
       Left = 5
-      Top = 238
-      Width = 232
+      Top = 227
+      Width = 228
       Height = 22
       Align = alNone
       Anchors = [akLeft, akRight, akBottom]
@@ -1225,5 +1230,9 @@ object PrincipalForm: TPrincipalForm
       C007DBEF0000C003C007DBEF00008001C007DDDF80008181C007D7FFC01FC3C3
       C007EFFFE01FE7E7E00FFFFFF01FFFFF00000000000000000000000000000000
       000000000000}
+  end
+  object XPManifest1: TXPManifest
+    Left = 248
+    Top = 16
   end
 end
